@@ -408,6 +408,7 @@
     $("#menu-toggle").addEventListener("click", () => { $("#sidebar").classList.add("open"); $("#sidebar-overlay").classList.add("open"); });
     $("#sidebar-overlay").addEventListener("click", () => { $("#sidebar").classList.remove("open"); $("#sidebar-overlay").classList.remove("open"); });
     $("#logout-button").addEventListener("click", logout);
+    $("#logout-top-button").addEventListener("click", logout);
   }
 
   let authMode = "register";
