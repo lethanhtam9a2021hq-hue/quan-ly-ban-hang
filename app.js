@@ -2,6 +2,9 @@
   "use strict";
 
   const STORAGE_KEY = "lai-loi-store-v1";
+  const AUTH_SESSION_KEY = "lai-loi-demo-session";
+  const DEMO_EMAIL = "demo@lailoi.vn";
+  const DEMO_PASSWORD = "lailoi123";
   const monthStart = new Date();
   monthStart.setDate(1);
   monthStart.setHours(0, 0, 0, 0);
@@ -404,6 +407,61 @@
     $("#export-report").addEventListener("click", exportCSV);
     $("#menu-toggle").addEventListener("click", () => { $("#sidebar").classList.add("open"); $("#sidebar-overlay").classList.add("open"); });
     $("#sidebar-overlay").addEventListener("click", () => { $("#sidebar").classList.remove("open"); $("#sidebar-overlay").classList.remove("open"); });
+    $("#logout-button").addEventListener("click", logout);
+  }
+
+  function showLoginError(message) {
+    $("#login-error").textContent = message;
+  }
+  function logout() {
+    try {
+      sessionStorage.removeItem(AUTH_SESSION_KEY);
+    } catch (error) {
+      console.error("Không thể kết thúc phiên demo:", error);
+    }
+    $("#app-shell").hidden = true;
+    $("#auth-screen").hidden = false;
+    $("#login-password").value = "";
+    showLoginError("");
+    if (window.location.hash) history.replaceState(null, "", `${window.location.pathname}${window.location.search}`);
+    $("#login-email").focus();
+  }
+  function initializeAuthentication() {
+    $("#login-form").addEventListener("submit", (event) => {
+      event.preventDefault();
+      const email = $("#login-email").value.trim().toLocaleLowerCase("vi");
+      const password = $("#login-password").value;
+      if (email !== DEMO_EMAIL || password !== DEMO_PASSWORD) {
+        showLoginError("Email hoặc mật khẩu chưa đúng. Hãy dùng tài khoản demo bên dưới.");
+        $("#login-password").setAttribute("aria-invalid", "true");
+        return;
+      }
+      try {
+        sessionStorage.setItem(AUTH_SESSION_KEY, DEMO_EMAIL);
+      } catch (error) {
+        console.error("Không thể lưu phiên demo:", error);
+        showLoginError("Trình duyệt không cho phép tạo phiên. Hãy bật session storage rồi thử lại.");
+        return;
+      }
+      $("#login-password").removeAttribute("aria-invalid");
+      showLoginError("");
+      $("#auth-screen").hidden = true;
+      $("#app-shell").hidden = false;
+      $("#profile-display-name").textContent = "Linh Nguyễn";
+      $("#welcome-name").textContent = "Linh";
+      setView(window.location.hash.slice(1) || "dashboard");
+    });
+
+    let authenticated = false;
+    try {
+      authenticated = sessionStorage.getItem(AUTH_SESSION_KEY) === DEMO_EMAIL;
+    } catch (error) {
+      console.error("Không thể kiểm tra phiên demo:", error);
+      showLoginError("Không thể kiểm tra phiên đăng nhập trong trình duyệt này.");
+    }
+    $("#auth-screen").hidden = authenticated;
+    $("#app-shell").hidden = !authenticated;
   }
   initialize();
+  initializeAuthentication();
 })();

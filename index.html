@@ -12,7 +12,56 @@
     <link rel="stylesheet" href="styles.css">
   </head>
   <body>
-    <div class="app-shell">
+    <main class="auth-screen" id="auth-screen" hidden>
+      <section class="auth-story">
+        <a class="brand auth-brand" href="#" aria-label="Lãi Lời">
+          <span class="brand-mark"><span></span><span></span><span></span></span>
+          <span>Lãi Lời<span class="brand-dot">.</span></span>
+        </a>
+        <div class="story-content">
+          <div class="story-kicker"><span class="live-dot"></span> GỌN GÀNG TỪNG ĐỒNG</div>
+          <h1>Bán hàng vui,<br>quản lý <span>nhẹ tênh.</span></h1>
+          <p>Đơn hàng, chi phí và lợi nhuận — tất cả ở một nơi để bạn an tâm tập trung vào điều mình yêu.</p>
+          <div class="story-preview">
+            <div class="preview-top"><span><i></i> Tổng quan cửa hàng</span><span>Tháng này</span></div>
+            <div class="preview-number">12.480.000 ₫ <span>↗ 18,6%</span></div>
+            <div class="preview-bars"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+            <div class="preview-caption"><span>01 Thg 11</span><span>18 Thg 11</span></div>
+          </div>
+        </div>
+        <div class="story-footer"><span>Không gian nhỏ xinh cho cửa hàng của bạn</span><span>♥</span></div>
+      </section>
+      <section class="auth-panel">
+        <div class="auth-form-wrap">
+          <a class="brand auth-mobile-brand" href="#" aria-label="Lãi Lời">
+            <span class="brand-mark"><span></span><span></span><span></span></span>
+            <span>Lãi Lời<span class="brand-dot">.</span></span>
+          </a>
+          <div class="auth-heading">
+            <div class="eyebrow">CHÀO MỪNG BẠN TRỞ LẠI</div>
+            <h2>Đăng nhập</h2>
+            <p>Đăng nhập để tiếp tục quản lý cửa hàng nhé.</p>
+          </div>
+          <form id="login-form" class="login-form" novalidate>
+            <label class="form-field">Email
+              <span class="auth-input-wrap"><span class="auth-input-icon">✉</span><input id="login-email" name="email" type="email" autocomplete="username" required placeholder="ban@email.com"></span>
+            </label>
+            <label class="form-field">Mật khẩu
+              <span class="auth-input-wrap"><span class="auth-input-icon">⌑</span><input id="login-password" name="password" type="password" autocomplete="current-password" required placeholder="Nhập mật khẩu"></span>
+            </label>
+            <div class="login-error" id="login-error" role="alert" aria-live="polite"></div>
+            <button type="submit" class="button button-dark login-submit">Đăng nhập <span>→</span></button>
+          </form>
+          <div class="demo-credentials">
+            <div class="demo-label"><span>✳</span> TÀI KHOẢN DÙNG THỬ</div>
+            <div><span>Email</span><strong>demo@lailoi.vn</strong></div>
+            <div><span>Mật khẩu</span><strong>lailoi123</strong></div>
+          </div>
+          <p class="demo-warning">Đây là đăng nhập demo trên trình duyệt, không bảo vệ dữ liệu như hệ thống tài khoản thật.</p>
+        </div>
+      </section>
+    </main>
+    <div class="app-shell" id="app-shell" hidden>
       <aside class="sidebar" id="sidebar">
         <a class="brand" href="#dashboard" aria-label="Lãi Lời - Tổng quan">
           <span class="brand-mark"><span></span><span></span><span></span></span>
@@ -38,10 +87,10 @@
             <p>Ghi lại chi phí ngay khi phát sinh để xem lợi nhuận chính xác hơn nhé!</p>
             <button type="button" class="tip-link" data-view="expenses">Thêm chi phí <span>→</span></button>
           </div>
-          <button class="profile-button" type="button">
+          <button class="profile-button" id="logout-button" type="button" aria-label="Đăng xuất">
             <div class="profile-avatar">L</div>
-            <span class="profile-name"><strong>Linh Nguyễn</strong><small>Chủ cửa hàng</small></span>
-            <span class="profile-more">···</span>
+            <span class="profile-name"><strong id="profile-display-name">Linh Nguyễn</strong><small>Đăng xuất</small></span>
+            <span class="profile-more">↗</span>
           </button>
         </div>
       </aside>
@@ -60,7 +109,7 @@
         <div class="page-content">
           <section class="view active" id="view-dashboard">
             <div class="page-heading">
-              <div><div class="eyebrow"><span class="live-dot"></span> CỬA HÀNG ĐANG HOẠT ĐỘNG</div><h1>Chào buổi sáng, Linh <span class="wave">✳</span></h1><p class="heading-subtitle">Cùng xem hôm nay cửa hàng mình đang thế nào nhé.</p></div>
+              <div><div class="eyebrow"><span class="live-dot"></span> CỬA HÀNG ĐANG HOẠT ĐỘNG</div><h1>Chào buổi sáng, <span id="welcome-name">Linh</span> <span class="wave">✳</span></h1><p class="heading-subtitle">Cùng xem hôm nay cửa hàng mình đang thế nào nhé.</p></div>
               <button class="button button-outline" id="export-dashboard"><span>↥</span> Xuất báo cáo</button>
             </div>
             <div class="stats-grid">
