@@ -38,26 +38,32 @@
             <span>Lãi Lời<span class="brand-dot">.</span></span>
           </a>
           <div class="auth-heading">
-            <div class="eyebrow">CHÀO MỪNG BẠN TRỞ LẠI</div>
-            <h2>Đăng nhập</h2>
-            <p>Đăng nhập để tiếp tục quản lý cửa hàng nhé.</p>
+            <div class="eyebrow" id="auth-kicker">BẮT ĐẦU CÙNG LÃI LỜI</div>
+            <h2 id="auth-title">Tạo tài khoản</h2>
+            <p id="auth-description">Đăng ký để bắt đầu quản lý cửa hàng của bạn.</p>
           </div>
           <form id="login-form" class="login-form" novalidate>
+            <label class="form-field registration-only" for="register-name" hidden>Họ và tên
+              <span class="auth-input-wrap"><span class="auth-input-icon">♙</span><input id="register-name" name="name" type="text" autocomplete="name" maxlength="60" placeholder="Tên của bạn"></span>
+            </label>
             <label class="form-field">Email
               <span class="auth-input-wrap"><span class="auth-input-icon">✉</span><input id="login-email" name="email" type="email" autocomplete="username" required placeholder="ban@email.com"></span>
             </label>
             <label class="form-field">Mật khẩu
-              <span class="auth-input-wrap"><span class="auth-input-icon">⌑</span><input id="login-password" name="password" type="password" autocomplete="current-password" required placeholder="Nhập mật khẩu"></span>
+              <span class="auth-input-wrap"><span class="auth-input-icon">⌑</span><input id="login-password" name="password" type="password" autocomplete="new-password" minlength="8" maxlength="128" required placeholder="Ít nhất 8 ký tự"></span>
+            </label>
+            <label class="form-field registration-only" for="register-password-confirm" hidden>Nhập lại mật khẩu
+              <span class="auth-input-wrap"><span class="auth-input-icon">⌑</span><input id="register-password-confirm" name="passwordConfirm" type="password" autocomplete="new-password" minlength="8" maxlength="128" placeholder="Nhập lại mật khẩu"></span>
             </label>
             <div class="login-error" id="login-error" role="alert" aria-live="polite"></div>
-            <button type="submit" class="button button-dark login-submit">Đăng nhập <span>→</span></button>
+            <button type="submit" class="button button-dark login-submit" id="auth-submit">Tạo tài khoản <span>→</span></button>
           </form>
+          <div class="auth-switch"><span id="auth-switch-copy">Đã có tài khoản?</span> <button type="button" id="auth-switch-link">Đăng nhập</button></div>
           <div class="demo-credentials">
-            <div class="demo-label"><span>✳</span> TÀI KHOẢN DÙNG THỬ</div>
-            <div><span>Email</span><strong>demo@lailoi.vn</strong></div>
-            <div><span>Mật khẩu</span><strong>lailoi123</strong></div>
+            <div class="demo-label"><span>✳</span> LƯU Ý VỀ TÀI KHOẢN</div>
+            <p id="auth-note">Tài khoản chỉ dùng trên trình duyệt và thiết bị này.</p>
           </div>
-          <p class="demo-warning">Đây là đăng nhập demo trên trình duyệt, không bảo vệ dữ liệu như hệ thống tài khoản thật.</p>
+          <p class="demo-warning">Đây là đăng ký/đăng nhập demo phía trình duyệt, chưa phải hệ thống tài khoản an toàn có máy chủ.</p>
         </div>
       </section>
     </main>

@@ -2,9 +2,9 @@
   "use strict";
 
   const STORAGE_KEY = "lai-loi-store-v1";
-  const AUTH_SESSION_KEY = "lai-loi-demo-session";
-  const DEMO_EMAIL = "demo@lailoi.vn";
-  const DEMO_PASSWORD = "lailoi123";
+  const AUTH_SESSION_KEY = "lai-loi-account-session";
+  const AUTH_USERS_KEY = "lai-loi-demo-users-v1";
+  const AUTH_ITERATIONS = 120000;
   const monthStart = new Date();
   monthStart.setDate(1);
   monthStart.setHours(0, 0, 0, 0);
@@ -410,57 +410,203 @@
     $("#logout-button").addEventListener("click", logout);
   }
 
-  function showLoginError(message) {
-    $("#login-error").textContent = message;
+  let authMode = "register";
+  let currentAccount = null;
+  const showAuthMessage = (message) => { $("#login-error").textContent = message; };
+  function readAccounts() {
+    try {
+      const accounts = JSON.parse(localStorage.getItem(AUTH_USERS_KEY) || "[]");
+      if (!Array.isArray(accounts)) throw new TypeError("Danh sách tài khoản không hợp lệ");
+      return accounts;
+    } catch (error) {
+      console.error("Không thể đọc danh sách tài khoản:", error);
+      showAuthMessage("Không đọc được danh sách tài khoản trên thiết bị này.");
+      return null;
+    }
+  }
+  function writeAccounts(accounts) {
+    try {
+      localStorage.setItem(AUTH_USERS_KEY, JSON.stringify(accounts));
+      return true;
+    } catch (error) {
+      console.error("Không thể lưu tài khoản:", error);
+      showAuthMessage("Không thể lưu tài khoản. Hãy kiểm tra dung lượng trình duyệt.");
+      return false;
+    }
+  }
+  function toBase64(bytes) {
+    let binary = "";
+    bytes.forEach((byte) => { binary += String.fromCharCode(byte); });
+    return btoa(binary);
+  }
+  function fromBase64(value) {
+    return Uint8Array.from(atob(value), (char) => char.charCodeAt(0));
+  }
+  async function derivePassword(password, saltValue = null) {
+    if (!globalThis.crypto?.subtle) throw new Error("Trình duyệt không hỗ trợ Web Crypto");
+    const salt = saltValue ? fromBase64(saltValue) : globalThis.crypto.getRandomValues(new Uint8Array(16));
+    const key = await globalThis.crypto.subtle.importKey("raw", new TextEncoder().encode(password), "PBKDF2", false, ["deriveBits"]);
+    const bits = await globalThis.crypto.subtle.deriveBits({
+      name: "PBKDF2", salt, iterations: AUTH_ITERATIONS, hash: "SHA-256"
+    }, key, 256);
+    return { salt: toBase64(salt), passwordHash: toBase64(new Uint8Array(bits)) };
+  }
+  function matchesHash(left, right) {
+    if (typeof left !== "string" || typeof right !== "string" || left.length !== right.length) return false;
+    let mismatch = 0;
+    for (let index = 0; index < left.length; index += 1) mismatch |= left.charCodeAt(index) ^ right.charCodeAt(index);
+    return mismatch === 0;
+  }
+  function setAuthMode(mode, message = "") {
+    authMode = mode;
+    const registering = mode === "register";
+    document.title = `${registering ? "Đăng ký" : "Đăng nhập"} — Lãi Lời`;
+    $$(".registration-only").forEach((field) => { field.hidden = !registering; });
+    $("#register-name").required = registering;
+    $("#register-password-confirm").required = registering;
+    $("#auth-kicker").textContent = registering ? "BẮT ĐẦU CÙNG LÃI LỜI" : "CHÀO MỪNG BẠN TRỞ LẠI";
+    $("#auth-title").textContent = registering ? "Tạo tài khoản" : "Đăng nhập";
+    $("#auth-description").textContent = registering ? "Đăng ký để bắt đầu quản lý cửa hàng của bạn." : "Đăng nhập để tiếp tục quản lý cửa hàng nhé.";
+    $("#auth-submit").innerHTML = `${registering ? "Tạo tài khoản" : "Đăng nhập"} <span>→</span>`;
+    $("#auth-switch-copy").textContent = registering ? "Đã có tài khoản?" : "Chưa có tài khoản?";
+    $("#auth-switch-link").textContent = registering ? "Đăng nhập" : "Đăng ký ngay";
+    $("#login-password").autocomplete = registering ? "new-password" : "current-password";
+    $("#login-password").placeholder = registering ? "Tối thiểu 8 ký tự" : "Mật khẩu của bạn";
+    $("#auth-note").textContent = registering
+      ? "Tài khoản chỉ hoạt động trên trình duyệt và thiết bị đã đăng ký."
+      : "Nếu email chưa được đăng ký, ứng dụng sẽ đưa bạn về biểu mẫu tạo tài khoản.";
+    showAuthMessage(message);
+    $("#login-password").removeAttribute("aria-invalid");
+    $("#register-password-confirm").removeAttribute("aria-invalid");
+  }
+  function setAuthenticated(account) {
+    currentAccount = account;
+    $("#profile-display-name").textContent = account.displayName;
+    $("#welcome-name").textContent = account.displayName.trim().split(/\s+/)[0] || "bạn";
+    $("#auth-screen").hidden = true;
+    $("#app-shell").hidden = false;
+    setView(window.location.hash.slice(1) || "dashboard");
   }
   function logout() {
     try {
       sessionStorage.removeItem(AUTH_SESSION_KEY);
     } catch (error) {
-      console.error("Không thể kết thúc phiên demo:", error);
+      console.error("Không thể kết thúc phiên:", error);
     }
+    const email = currentAccount?.email || "";
+    currentAccount = null;
     $("#app-shell").hidden = true;
     $("#auth-screen").hidden = false;
+    $("#login-email").value = email;
     $("#login-password").value = "";
-    showLoginError("");
+    $("#register-password-confirm").value = "";
     if (window.location.hash) history.replaceState(null, "", `${window.location.pathname}${window.location.search}`);
+    setAuthMode("login");
     $("#login-email").focus();
   }
-  function initializeAuthentication() {
-    $("#login-form").addEventListener("submit", (event) => {
-      event.preventDefault();
-      const email = $("#login-email").value.trim().toLocaleLowerCase("vi");
-      const password = $("#login-password").value;
-      if (email !== DEMO_EMAIL || password !== DEMO_PASSWORD) {
-        showLoginError("Email hoặc mật khẩu chưa đúng. Hãy dùng tài khoản demo bên dưới.");
-        $("#login-password").setAttribute("aria-invalid", "true");
-        return;
-      }
-      try {
-        sessionStorage.setItem(AUTH_SESSION_KEY, DEMO_EMAIL);
-      } catch (error) {
-        console.error("Không thể lưu phiên demo:", error);
-        showLoginError("Trình duyệt không cho phép tạo phiên. Hãy bật session storage rồi thử lại.");
-        return;
-      }
-      $("#login-password").removeAttribute("aria-invalid");
-      showLoginError("");
-      $("#auth-screen").hidden = true;
-      $("#app-shell").hidden = false;
-      $("#profile-display-name").textContent = "Linh Nguyễn";
-      $("#welcome-name").textContent = "Linh";
-      setView(window.location.hash.slice(1) || "dashboard");
-    });
-
-    let authenticated = false;
-    try {
-      authenticated = sessionStorage.getItem(AUTH_SESSION_KEY) === DEMO_EMAIL;
-    } catch (error) {
-      console.error("Không thể kiểm tra phiên demo:", error);
-      showLoginError("Không thể kiểm tra phiên đăng nhập trong trình duyệt này.");
+  async function registerAccount() {
+    const name = $("#register-name").value.trim();
+    const email = $("#login-email").value.trim().toLocaleLowerCase("vi");
+    const password = $("#login-password").value;
+    const confirmation = $("#register-password-confirm").value;
+    if (!name) { showAuthMessage("Nhập tên của bạn để tạo tài khoản."); return; }
+    if (!$("#login-email").checkValidity()) { showAuthMessage("Nhập địa chỉ email hợp lệ."); return; }
+    if (password.length < 8) { showAuthMessage("Mật khẩu cần có ít nhất 8 ký tự."); $("#login-password").setAttribute("aria-invalid", "true"); return; }
+    if (password !== confirmation) { showAuthMessage("Mật khẩu nhập lại chưa khớp."); $("#register-password-confirm").setAttribute("aria-invalid", "true"); return; }
+    const accounts = readAccounts();
+    if (!accounts) return;
+    if (accounts.some((account) => account.email === email)) {
+      $("#login-password").value = "";
+      $("#register-password-confirm").value = "";
+      setAuthMode("login", "Email này đã có tài khoản. Hãy đăng nhập.");
+      return;
     }
-    $("#auth-screen").hidden = authenticated;
-    $("#app-shell").hidden = !authenticated;
+    const credentials = await derivePassword(password);
+    accounts.push({
+      email, displayName: name, salt: credentials.salt, passwordHash: credentials.passwordHash,
+      createdAt: new Date().toISOString()
+    });
+    if (!writeAccounts(accounts)) return;
+    $("#register-name").value = "";
+    $("#login-password").value = "";
+    $("#register-password-confirm").value = "";
+    setAuthMode("login", "Đăng ký thành công. Hãy đăng nhập bằng tài khoản vừa tạo.");
+    $("#login-email").value = email;
+  }
+  async function loginAccount() {
+    const email = $("#login-email").value.trim().toLocaleLowerCase("vi");
+    const password = $("#login-password").value;
+    if (!$("#login-email").checkValidity()) { showAuthMessage("Nhập địa chỉ email hợp lệ."); return; }
+    if (!password) { showAuthMessage("Nhập mật khẩu để đăng nhập."); return; }
+    const accounts = readAccounts();
+    if (!accounts) return;
+    const account = accounts.find((item) => item.email === email);
+    if (!account) {
+      $("#login-password").value = "";
+      setAuthMode("register", "Email này chưa có tài khoản. Vui lòng đăng ký trước khi đăng nhập.");
+      $("#login-email").value = email;
+      return;
+    }
+    const credentials = await derivePassword(password, account.salt);
+    if (!matchesHash(credentials.passwordHash, account.passwordHash)) {
+      showAuthMessage("Mật khẩu không chính xác. Vui lòng thử lại.");
+      $("#login-password").setAttribute("aria-invalid", "true");
+      return;
+    }
+    try {
+      sessionStorage.setItem(AUTH_SESSION_KEY, email);
+    } catch (error) {
+      console.error("Không thể lưu phiên đăng nhập:", error);
+      showAuthMessage("Không thể tạo phiên đăng nhập trong trình duyệt này.");
+      return;
+    }
+    $("#login-password").value = "";
+    showAuthMessage("");
+    setAuthenticated(account);
+  }
+  function initializeAuthentication() {
+    $("#auth-switch-link").addEventListener("click", () => {
+      const email = $("#login-email").value;
+      $("#login-password").value = "";
+      $("#register-password-confirm").value = "";
+      setAuthMode(authMode === "register" ? "login" : "register");
+      $("#login-email").value = email;
+    });
+    $("#login-form").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const submit = $("#auth-submit");
+      submit.disabled = true;
+      showAuthMessage("");
+      try {
+        if (authMode === "register") await registerAccount();
+        else await loginAccount();
+      } catch (error) {
+        console.error("Không thể xử lý yêu cầu tài khoản:", error);
+        showAuthMessage("Không thể xử lý tài khoản. Hãy thử lại trên trình duyệt hiện đại.");
+      } finally {
+        submit.disabled = false;
+      }
+    });
+    $("#login-password").addEventListener("input", () => $("#login-password").removeAttribute("aria-invalid"));
+    $("#register-password-confirm").addEventListener("input", () => $("#register-password-confirm").removeAttribute("aria-invalid"));
+
+    const accounts = readAccounts();
+    const preferredMode = accounts?.length ? "login" : "register";
+    let account = null;
+    try {
+      const email = sessionStorage.getItem(AUTH_SESSION_KEY);
+      account = accounts?.find((item) => item.email === email) || null;
+    } catch (error) {
+      console.error("Không thể kiểm tra phiên đăng nhập:", error);
+      showAuthMessage("Không thể kiểm tra phiên đăng nhập trong trình duyệt này.");
+    }
+    if (account) {
+      setAuthenticated(account);
+      return;
+    }
+    setAuthMode(preferredMode, accounts ? "" : "Không đọc được danh sách tài khoản trên thiết bị này.");
+    $("#auth-screen").hidden = false;
+    $("#app-shell").hidden = true;
   }
   initialize();
   initializeAuthentication();
