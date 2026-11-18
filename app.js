@@ -9,12 +9,6 @@
   monthStart.setDate(1);
   monthStart.setHours(0, 0, 0, 0);
   const localISO = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
-  const dayOffset = (days, hour = 10) => {
-    const date = new Date();
-    date.setDate(date.getDate() - days);
-    date.setHours(hour, 0, 0, 0);
-    return localISO(date);
-  };
   const money = (amount) => new Intl.NumberFormat("vi-VN", {
     style: "currency", currency: "VND", maximumFractionDigits: 0
   }).format(Number(amount) || 0);
@@ -30,44 +24,22 @@
   const escapeHTML = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => ({
     "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
   })[char]);
-  const defaultData = () => ({
-    transactions: [
-      { id: "DH-1058", type: "sale", title: "Đơn hàng #DH-1058", customer: "Nguyễn Minh Anh", product: "Túi tote hoa nhí", amount: 385000, date: dayOffset(0, 9), status: "completed" },
-      { id: "DH-1057", type: "sale", title: "Đơn hàng #DH-1057", customer: "Trần Ngọc Hà", product: "Bình giữ nhiệt Mây", amount: 520000, date: dayOffset(0, 8), status: "pending" },
-      { id: "CP-042", type: "expense", title: "Nhập hàng đợt tháng 11", category: "Nhập hàng", note: "Bộ sưu tập mới", amount: 2350000, date: dayOffset(1, 13) },
-      { id: "DH-1056", type: "sale", title: "Đơn hàng #DH-1056", customer: "Phạm Thảo Vy", product: "Nến thơm Gỗ thông", amount: 299000, date: dayOffset(1, 11), status: "completed" },
-      { id: "CP-041", type: "expense", title: "Hộp giấy & thiệp cảm ơn", category: "Đóng gói", note: "100 bộ", amount: 420000, date: dayOffset(2, 15) },
-      { id: "DH-1055", type: "sale", title: "Đơn hàng #DH-1055", customer: "Lê Gia Hân", product: "Túi tote hoa nhí", amount: 385000, date: dayOffset(2, 10), status: "completed" },
-      { id: "DH-1054", type: "sale", title: "Đơn hàng #DH-1054", customer: "Đỗ Khánh Linh", product: "Set quà Mây nhỏ", amount: 650000, date: dayOffset(3, 14), status: "completed" },
-      { id: "CP-040", type: "expense", title: "Phí quảng cáo Instagram", category: "Quảng cáo", note: "Chiến dịch cuối tuần", amount: 680000, date: dayOffset(4, 9) },
-      { id: "DH-1053", type: "sale", title: "Đơn hàng #DH-1053", customer: "Võ Ngọc Mai", product: "Nến thơm Gỗ thông", amount: 299000, date: dayOffset(5, 16), status: "completed" },
-      { id: "CP-039", type: "expense", title: "Phí giao hàng nội thành", category: "Vận chuyển", note: "Giao 12 đơn", amount: 185000, date: dayOffset(6, 12) },
-      { id: "DH-1052", type: "sale", title: "Đơn hàng #DH-1052", customer: "Nguyễn Bảo Châu", product: "Bình giữ nhiệt Mây", amount: 520000, date: dayOffset(7, 9), status: "completed" },
-      { id: "CP-038", type: "expense", title: "Nhập thêm túi tote", category: "Nhập hàng", note: "Nhập bổ sung", amount: 1180000, date: dayOffset(9, 9) },
-      { id: "DH-1051", type: "sale", title: "Đơn hàng #DH-1051", customer: "Mai Phương Thảo", product: "Túi tote hoa nhí", amount: 385000, date: dayOffset(10, 11), status: "completed" },
-      { id: "DH-1050", type: "sale", title: "Đơn hàng #DH-1050", customer: "Phan Yến Nhi", product: "Nến thơm Gỗ thông", amount: 299000, date: dayOffset(12, 14), status: "completed" },
-      { id: "CP-037", type: "expense", title: "Phí quảng cáo Facebook", category: "Quảng cáo", note: "Tháng này", amount: 450000, date: dayOffset(15, 9) },
-      { id: "DH-1049", type: "sale", title: "Đơn hàng #DH-1049", customer: "Nguyễn Quỳnh Anh", product: "Set quà Mây nhỏ", amount: 650000, date: dayOffset(17, 15), status: "completed" },
-      { id: "CP-036", type: "expense", title: "Vật liệu đóng gói", category: "Đóng gói", note: "Giấy kraft, ruy băng", amount: 290000, date: dayOffset(20, 10) },
-      { id: "DH-1048", type: "sale", title: "Đơn hàng #DH-1048", customer: "Trần Thanh Tâm", product: "Bình giữ nhiệt Mây", amount: 520000, date: dayOffset(23, 9), status: "completed" },
-      { id: "DH-1047", type: "sale", title: "Đơn hàng #DH-1047", customer: "Lưu Hoài An", product: "Túi tote hoa nhí", amount: 385000, date: dayOffset(25, 16), status: "completed" }
-    ],
-    products: [
-      { id: "SP-01", name: "Túi tote hoa nhí", category: "Túi vải · Màu kem", price: 385000, stock: 18, emoji: "👜" },
-      { id: "SP-02", name: "Bình giữ nhiệt Mây", category: "Đồ dùng · Trắng sữa", price: 520000, stock: 4, emoji: "🫖" },
-      { id: "SP-03", name: "Nến thơm Gỗ thông", category: "Nến thơm · 120g", price: 299000, stock: 12, emoji: "🕯️" },
-      { id: "SP-04", name: "Set quà Mây nhỏ", category: "Quà tặng · 3 món", price: 650000, stock: 7, emoji: "🎁" },
-      { id: "SP-05", name: "Kẹp tóc hoa sứ", category: "Phụ kiện · Trắng", price: 89000, stock: 2, emoji: "🌼" }
-    ]
-  });
-  let state;
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    state = saved ? JSON.parse(saved) : defaultData();
-    if (!Array.isArray(state.transactions) || !Array.isArray(state.products)) throw new Error("Dữ liệu lưu không hợp lệ");
-  } catch (error) {
-    console.error("Không thể đọc dữ liệu cửa hàng đã lưu:", error);
-    state = defaultData();
+  const emptyData = () => ({ transactions: [], products: [] });
+  let state = emptyData();
+  let currentStoreKey = null;
+  function loadStoreForAccount(email) {
+    const storageKey = `${STORAGE_KEY}:${encodeURIComponent(email)}`;
+    try {
+      const saved = localStorage.getItem(storageKey);
+      const data = saved ? JSON.parse(saved) : emptyData();
+      if (!Array.isArray(data.transactions) || !Array.isArray(data.products)) throw new TypeError("Dữ liệu cửa hàng không hợp lệ");
+      currentStoreKey = storageKey;
+      state = data;
+      return true;
+    } catch (error) {
+      console.error("Không thể đọc dữ liệu cửa hàng của tài khoản:", error);
+      return false;
+    }
   }
   function editProduct(id) {
     const product = state.products.find((item) => item.id === id);
@@ -77,7 +49,12 @@
   const $ = (selector, root = document) => root.querySelector(selector);
   const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
   const save = () => {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+    if (!currentStoreKey) {
+      console.error("Không thể lưu dữ liệu cửa hàng khi chưa có tài khoản đang đăng nhập.");
+      toast("Vui lòng đăng nhập lại để lưu dữ liệu.");
+      return;
+    }
+    try { localStorage.setItem(currentStoreKey, JSON.stringify(state)); }
     catch (error) { console.error("Không thể lưu dữ liệu cửa hàng:", error); toast("Không thể lưu dữ liệu. Kiểm tra dung lượng trình duyệt."); }
   };
   let toastTimer;
@@ -481,12 +458,18 @@
     $("#register-password-confirm").removeAttribute("aria-invalid");
   }
   function setAuthenticated(account) {
+    if (!loadStoreForAccount(account.email)) {
+      showAuthMessage("Không đọc được dữ liệu tài khoản trên thiết bị này.");
+      return false;
+    }
     currentAccount = account;
     $("#profile-display-name").textContent = account.displayName;
     $("#welcome-name").textContent = account.displayName.trim().split(/\s+/)[0] || "bạn";
     $("#auth-screen").hidden = true;
     $("#app-shell").hidden = false;
+    renderAll();
     setView(window.location.hash.slice(1) || "dashboard");
+    return true;
   }
   function logout() {
     try {
@@ -496,6 +479,9 @@
     }
     const email = currentAccount?.email || "";
     currentAccount = null;
+    currentStoreKey = null;
+    state = emptyData();
+    renderAll();
     $("#app-shell").hidden = true;
     $("#auth-screen").hidden = false;
     $("#login-email").value = email;
@@ -563,7 +549,10 @@
     }
     $("#login-password").value = "";
     showAuthMessage("");
-    setAuthenticated(account);
+    if (!setAuthenticated(account)) {
+      try { sessionStorage.removeItem(AUTH_SESSION_KEY); }
+      catch (error) { console.error("Không thể xóa phiên đăng nhập:", error); }
+    }
   }
   function initializeAuthentication() {
     $("#auth-switch-link").addEventListener("click", () => {
@@ -601,11 +590,14 @@
       console.error("Không thể kiểm tra phiên đăng nhập:", error);
       showAuthMessage("Không thể kiểm tra phiên đăng nhập trong trình duyệt này.");
     }
+    let startupMessage = accounts ? "" : "Không đọc được danh sách tài khoản trên thiết bị này.";
     if (account) {
-      setAuthenticated(account);
-      return;
+      if (setAuthenticated(account)) return;
+      try { sessionStorage.removeItem(AUTH_SESSION_KEY); }
+      catch (error) { console.error("Không thể xóa phiên đăng nhập:", error); }
+      startupMessage = "Không đọc được dữ liệu tài khoản trên thiết bị này.";
     }
-    setAuthMode(preferredMode, accounts ? "" : "Không đọc được danh sách tài khoản trên thiết bị này.");
+    setAuthMode(preferredMode, startupMessage);
     $("#auth-screen").hidden = false;
     $("#app-shell").hidden = true;
   }
